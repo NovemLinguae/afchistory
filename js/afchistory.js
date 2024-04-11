@@ -195,9 +195,8 @@ $( document ).ready( function () {
     } );
 
     $( "#username" ).keyup( function ( e ) {
-        if ( e.keyCode == 13 ) {
-
-            // Enter was pressed in the username field
+        var pressedEnter = e.keyCode == 13;
+        if ( pressedEnter ) {
             showHistory();
         }
     } );
