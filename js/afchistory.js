@@ -163,7 +163,6 @@ $( document ).ready( function () {
 
     // Based on checkboxes, update visibility of rows
     function updateFiltered() {
-
         // Get which checkboxes are checked
         var enabledFiltersElements = document.querySelectorAll('input[name=filter]:checked');
         var enabledFilters = 0;
@@ -176,6 +175,13 @@ $( document ).ready( function () {
             rows[i].style.display = ( enabledFilters & parseInt( rows[i].dataset.action ) )
                 ? "" : "none";
         }
+    }
+
+    // Utility function; from http://stackoverflow.com/a/2901298/1757964
+    function numberWithCommas( x ) {
+        var parts = x.toString().split( "." );
+        parts[ 0 ] = parts[ 0 ].replace( /\B(?=(\d{3})+(?!\d))/g, "," );
+        return parts.join( "." );
     }
 
     var filterCheckboxes = document.getElementsByName( "filter" );
@@ -197,24 +203,15 @@ $( document ).ready( function () {
     } );
 
     if ( window.location.hash && window.location.hash.indexOf( "#user=" ) >= 0 ) {
-
         // In the past, we let the hash specify the user, like #user=Example
         $( "#username" ).val( decodeURIComponent( window.location.hash.replace( /^#user=/, "" ) ) );
         $( "#submit" ).trigger( "click" );
     } else if( window.location.search.substring( 1 ).indexOf( "user=" ) >= 0 ) {
-
         // Allow the user to be specified in the query string, like ?user=Example
         var userArgMatch = /&?user=([^&#]*)/.exec( window.location.search.substring( 1 ) );
         if( userArgMatch && userArgMatch[1] ) {
             $( "#username" ).val( decodeURIComponent( userArgMatch[1].replace( /\+/g, " " ).replace( /_/g, " " ) ) );
             $( "#submit" ).trigger( "click" );
         }
-    }
-
-    // Utility function; from http://stackoverflow.com/a/2901298/1757964
-    function numberWithCommas( x ) {
-        var parts = x.toString().split( "." );
-        parts[ 0 ] = parts[ 0 ].replace( /\B(?=(\d{3})+(?!\d))/g, "," );
-        return parts.join( "." );
     }
 } );
