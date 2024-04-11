@@ -12,8 +12,8 @@ $( document ).ready( function () {
             $( "#error" ).empty();
             $( "#error" ).show();
             $( "#error" ).append( $( "<div>" )
-                               .addClass( "errorbox" )
-                               .text( "No username specified." ) );
+                .addClass( "errorbox" )
+                .text( "No username specified." ) );
             return;
         }
 
@@ -33,20 +33,30 @@ $( document ).ready( function () {
         // Generate permalink
         // We want what's in the address bar without the ?=___ or #___ stuff
         var permalinkSubstringMatch = /[\#\?]/.exec( window.location.href );
-        var permalink = window.location.href;
+        var baseLink = window.location.href;
         if( permalinkSubstringMatch ) {
-            permalink = window.location.href.substring( 0, permalinkSubstringMatch.index );
+            baseLink = window.location.href.substring( 0, permalinkSubstringMatch.index );
         }
-        permalink += "?user=" + encodeURIComponent( username );
+        var permalink = baseLink + "?user=" + encodeURIComponent( username );
 
-        // Display permalink
-        $( "#permalink" )
+        // Change window title to include the username searched for. Useful in browser history.
+        var newTitle = 'AfC Review History';
+        if ( username ) {
+            newTitle += ' - ' + username;
+        }
+        document.title = newTitle;
+
+        // Change URL to the permalink
+        window.history.pushState( {}, null, permalink );
+
+        // Display "start over" link
+        $( "#start-over" )
             .empty()
-            .append( "(" )
+            .append( "(or " )
             .append( $( "<a>" )
-                .attr( "href", permalink )
-                .text( "permalink" ) )
-            .append( " to these results)" );
+                .attr( "href", baseLink )
+                .text( "start over" ) )
+            .append( ")" );
 
         var baseUrl = API_ROOT + "?action=query&list=usercontribs&ucuser=" + username + "&uclimit=500&ucprop=title|timestamp|comment&ucnamespace=0|5|118&ucshow=!new" + API_SUFFIX;
         var query = function ( continueData ) {
@@ -163,7 +173,6 @@ $( document ).ready( function () {
 
     // Based on checkboxes, update visibility of rows
     function updateFiltered() {
-
         // Get which checkboxes are checked
         var enabledFiltersElements = document.querySelectorAll('input[name=filter]:checked');
         var enabledFilters = 0;
@@ -178,43 +187,43 @@ $( document ).ready( function () {
         }
     }
 
-    var filterCheckboxes = document.getElementsByName( "filter" );
-    for( var i = 0; i < filterCheckboxes.length; i++ ) {
-        filterCheckboxes[i].addEventListener( 'click', updateFiltered );
-    }
-
-    // Bind form submission handler to submission button & username field
-    $( "#submit" ).click( function () {
-        showHistory()
-    } );
-
-    $( "#username" ).keyup( function ( e ) {
-        if ( e.keyCode == 13 ) {
-
-            // Enter was pressed in the username field
-            showHistory();
-        }
-    } );
-
-    if ( window.location.hash && window.location.hash.indexOf( "#user=" ) >= 0 ) {
-
-        // In the past, we let the hash specify the user, like #user=Example
-        $( "#username" ).val( decodeURIComponent( window.location.hash.replace( /^#user=/, "" ) ) );
-        $( "#submit" ).trigger( "click" );
-    } else if( window.location.search.substring( 1 ).indexOf( "user=" ) >= 0 ) {
-
-        // Allow the user to be specified in the query string, like ?user=Example
-        var userArgMatch = /&?user=([^&#]*)/.exec( window.location.search.substring( 1 ) );
-        if( userArgMatch && userArgMatch[1] ) {
-            $( "#username" ).val( decodeURIComponent( userArgMatch[1].replace( /\+/g, " " ).replace( /_/g, " " ) ) );
-            $( "#submit" ).trigger( "click" );
-        }
-    }
-
     // Utility function; from http://stackoverflow.com/a/2901298/1757964
     function numberWithCommas( x ) {
         var parts = x.toString().split( "." );
         parts[ 0 ] = parts[ 0 ].replace( /\B(?=(\d{3})+(?!\d))/g, "," );
         return parts.join( "." );
+    }
+
+    var filterCheckboxes = document.getElementsByName( "filter" );
+    for( var i = 0; i < filterCheckboxes.length; i++ ) {
+        filterCheckboxes[i].addEventListener( 'click', updateFiltered );
+    }
+
+    $( "#submit" ).click( function () {
+        showHistory()
+    } );
+
+    $( "#username" ).keyup( function ( e ) {
+        var pressedEnter = e.keyCode == 13;
+        if ( pressedEnter ) {
+            showHistory();
+        }
+    } );
+
+    // In the past, we let the hash specify the user, like #user=Example
+    if ( window.location.hash && window.location.hash.indexOf( "#user=" ) >= 0 ) {
+        $( "#username" ).val( decodeURIComponent( window.location.hash.replace( /^#user=/, "" ) ) );
+        $( "#submit" ).trigger( "click" );
+    // Allow the user to be specified in the query string, like ?user=Example
+    } else if( window.location.search.substring( 1 ).indexOf( "user=" ) >= 0 ) {
+        var userArgMatch = /&?user=([^&#]*)/.exec( window.location.search.substring( 1 ) );
+        if( userArgMatch && userArgMatch[1] ) {
+            $( "#username" ).val( decodeURIComponent( userArgMatch[1].replace( /\+/g, " " ).replace( /_/g, " " ) ) );
+            $( "#submit" ).trigger( "click" );
+        }
+    // If no user in the URL, update the browser history and title (normally updated when submitting, but we didn't submit)
+    } else {
+        document.title = 'AfC Review History';
+        window.history.pushState({}, null, window.location.href);
     }
 } );
